@@ -4,6 +4,6 @@ import java.util.List;
 
 public interface RoutingService {
 
-	public Integer calculateRouteDistance(List<String> towns);
+	public String calculateRouteDistance(List<String> towns);
 
 }
