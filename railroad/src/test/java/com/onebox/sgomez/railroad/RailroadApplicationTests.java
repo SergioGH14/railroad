@@ -9,5 +9,4 @@ class RailroadApplicationTests {
 	@Test
 	void contextLoads() {
 	}
-
 }

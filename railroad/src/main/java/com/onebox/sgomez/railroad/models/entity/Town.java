@@ -17,6 +17,13 @@ public class Town implements Serializable {
 
 	@Id
 	private String name;
+	
+	public Town() {
+	}
+
+	public Town(String name) {
+		this.name = name;
+	}
 
 	public String getName() {
 		return name;

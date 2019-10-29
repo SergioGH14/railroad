@@ -30,6 +30,18 @@ public class RailRoad implements Serializable {
 	private Town destination;
 
 	private Integer distance;
+	
+	
+
+	public RailRoad() {
+	}
+
+	public RailRoad(Long id, Town origin, Town destination, Integer distance) {
+		this.id = id;
+		this.origin = origin;
+		this.destination = destination;
+		this.distance = distance;
+	}
 
 	public Long getId() {
 		return id;

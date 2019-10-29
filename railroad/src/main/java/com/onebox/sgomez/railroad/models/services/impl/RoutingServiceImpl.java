@@ -1,11 +1,13 @@
 package com.onebox.sgomez.railroad.models.services.impl;
 
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.onebox.sgomez.railroad.exceptions.RailRoadConnectionException;
 import com.onebox.sgomez.railroad.models.dao.RailRoadDao;
 import com.onebox.sgomez.railroad.models.dao.TownDao;
 import com.onebox.sgomez.railroad.models.entity.RailRoad;
@@ -21,32 +23,47 @@ public class RoutingServiceImpl implements RoutingService {
 	@Autowired
 	private TownDao townService;
 
+	private static final String ERROR_MESSAGE = "NO SUCH ROUTE";
+
 	@Override
 	public String calculateRouteDistance(List<String> towns) {
 		Integer distance = 0;
 		Boolean areConnection = true;
-		List<Town> townsToVisit = generateTowns(towns);
-		Town backTown = null;
+		List<Town> townsToVisit;
+		try {
+			townsToVisit = generateTowns(towns);
 
-		for (Town town : townsToVisit) {
-			if (backTown != null && areConnection) {
-				areConnection &= (distanceBetweenTowns(backTown, town) == 0) ? false : true;
-				distance += distanceBetweenTowns(backTown, town);
+			Town backTown = null;
+
+			for (Town town : townsToVisit) {
+				if (backTown != null) {
+					distance += distanceBetweenTowns(backTown, town);
+				}
+				backTown = town;
 			}
-			backTown = town;
-		}
-		return (areConnection) ? String.valueOf(distance) : "NO SUCH ROUTE";
+		} catch (InputMismatchException | RailRoadConnectionException err) {
+			return ERROR_MESSAGE;
+		} 
+		return (areConnection) ? String.valueOf(distance) : ERROR_MESSAGE;
 	}
 
-	private List<Town> generateTowns(List<String> towns) {
+	private List<Town> generateTowns(List<String> towns) throws InputMismatchException {
 		List<Town> townsList = new ArrayList<>();
-		towns.forEach(x -> townsList.add(townService.findById(x).get()));
+		towns.forEach(x -> {
+			Town town = townService.findById(x).orElseThrow(() -> new InputMismatchException("City not found"));
+			townsList.add(town);
+		});
 		return townsList;
 	}
 
-	private Integer distanceBetweenTowns(Town origin, Town destination) {
+	private Integer distanceBetweenTowns(Town origin, Town destination) throws RailRoadConnectionException {
 		List<RailRoad> routeBetweenTowns = shortestRouteBetweenTowns(origin, destination);
-		return routeBetweenTowns.stream().mapToInt(x -> x.getDistance()).sum();
+		routeBetweenTowns.forEach(x->System.out.println(x.getDistance()));
+		Integer distance = routeBetweenTowns.stream().mapToInt(x -> x.getDistance()).sum();
+		if (distance == 0) {
+			throw new RailRoadConnectionException(ERROR_MESSAGE);
+		}
+		return distance;
 	}
 
 	private List<RailRoad> shortestRouteBetweenTowns(Town origin, Town destination) {
